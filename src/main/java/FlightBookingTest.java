@@ -1,89 +1,73 @@
-import com.sun.javafx.PlatformUtil;
+import com.cleartrip.genericLibraries.Browser;
+import com.cleartrip.genericLibraries.CommonMethods;
+import com.cleartrip.objectRepository.FlightPage;
 import org.openqa.selenium.By;
 import org.openqa.selenium.NoSuchElementException;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
-import org.openqa.selenium.chrome.ChromeDriver;
-import org.openqa.selenium.support.ui.Select;
+import org.openqa.selenium.support.PageFactory;
 import org.testng.Assert;
+import org.testng.Reporter;
+import org.testng.annotations.AfterClass;
+import org.testng.annotations.AfterMethod;
+import org.testng.annotations.BeforeClass;
+import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
-
 import java.util.List;
 
 public class FlightBookingTest {
+	/**
+	 * 
+	 * author Swagatika
+	 * 
+	 */
 
-    WebDriver driver = new ChromeDriver();
+	/* Declaring object*/
+	WebDriver driver ;
+	FlightPage flightPage;
 
+	@BeforeClass
+	public void ConfigurationBeforeRunningClass()
+	{
+		/* Initializing the elements*/
+		Reporter.log("launch browser");
+		driver = Browser.getBrowser();
+		flightPage = PageFactory.initElements(driver, FlightPage.class);
+	}
 
-    @Test
-    public void testThatResultsAppearForAOneWayJourney() {
+	@BeforeMethod
+	public void configurationBeforeRunningMethod()
+	{
+		Reporter.log("Navigating to homepage of Application");
+		flightPage.navigateToFlightPage();
+	}    
 
-        setDriverPath();
-        driver.get("https://www.cleartrip.com/");
-        waitFor(2000);
-        driver.findElement(By.id("OneWay")).click();
-
-        driver.findElement(By.id("FromTag")).clear();
-        driver.findElement(By.id("FromTag")).sendKeys("Bangalore");
-
-        //wait for the auto complete options to appear for the origin
-
-        waitFor(2000);
-        List<WebElement> originOptions = driver.findElement(By.id("ui-id-1")).findElements(By.tagName("li"));
-        originOptions.get(0).click();
-
-        driver.findElement(By.id("toTag")).clear();
-        driver.findElement(By.id("toTag")).sendKeys("Delhi");
-
-        //wait for the auto complete options to appear for the destination
-
-        waitFor(2000);
-        //select the first item from the destination auto complete list
-        List<WebElement> destinationOptions = driver.findElement(By.id("ui-id-2")).findElements(By.tagName("li"));
-        destinationOptions.get(0).click();
-
-        driver.findElement(By.xpath("//*[@id='ui-datepicker-div']/div[1]/table/tbody/tr[3]/td[7]/a")).click();
-
-        //all fields filled in. Now click on search
-        driver.findElement(By.id("SearchBtn")).click();
-
-        waitFor(5000);
-        //verify that result appears for the provided journey search
-        Assert.assertTrue(isElementPresent(By.className("searchSummary")));
-
-        //close the browser
-        driver.quit();
-
-    }
-
-
-    private void waitFor(int durationInMilliSeconds) {
-        try {
-            Thread.sleep(durationInMilliSeconds);
-        } catch (InterruptedException e) {
-            e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
-        }
-    }
-
-
-    private boolean isElementPresent(By by) {
-        try {
-            driver.findElement(by);
-            return true;
-        } catch (NoSuchElementException e) {
-            return false;
-        }
-    }
-
-    private void setDriverPath() {
-        if (PlatformUtil.isMac()) {
-            System.setProperty("webdriver.chrome.driver", "chromedriver");
-        }
-        if (PlatformUtil.isWindows()) {
-            System.setProperty("webdriver.chrome.driver", "chromedriver.exe");
-        }
-        if (PlatformUtil.isLinux()) {
-            System.setProperty("webdriver.chrome.driver", "chromedriver_linux");
-        }
-    }
+	@Test
+	public void testThatResultsAppearForAOneWayJourney() throws InterruptedException {
+		CommonMethods cm=new CommonMethods();
+		Reporter.log("Entering various details to search flights");
+		flightPage.fromJourneySchedule();
+		cm.waitFor(2000);
+		List<WebElement> originOptions = driver.findElement(By.id("ui-id-1")).findElements(By.tagName("li"));
+		originOptions.get(0).click();
+		flightPage.toJourneySchedule();
+		cm.waitFor(2000);
+		Reporter.log("Selecting the first item from the destination auto complete list");
+		List<WebElement> destinationOptions = driver.findElement(By.id("ui-id-2")).findElements(By.tagName("li"));
+		destinationOptions.get(0).click();
+		flightPage.deptDate.click();
+		Reporter.log("All fields filled in. Now clicking on search");
+		flightPage.btnFlightSearch.click();
+		cm.waitFor(5000);
+		Reporter.log("Verify that result appears for the provided journey search");
+		
+		Assert.assertTrue(cm.isElementPresent(By.xpath("//div[@class = 'searchSummary']")));
+	}
+	
+	@AfterClass
+	public void configurationAfterRunningClass()
+	{
+		driver.quit();
+	}
+	
 }

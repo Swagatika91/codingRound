@@ -1,53 +1,70 @@
-import com.sun.javafx.PlatformUtil;
+import com.cleartrip.genericLibraries.Browser;
+import com.cleartrip.genericLibraries.CommonMethods;
+import com.cleartrip.objectRepository.FlightPage;
+import com.cleartrip.objectRepository.HotelPage;
+import java.util.List;
+import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
-import org.openqa.selenium.chrome.ChromeDriver;
-import org.openqa.selenium.support.FindBy;
-import org.openqa.selenium.support.ui.Select;
+import org.openqa.selenium.support.PageFactory;
+import org.testng.Reporter;
+import org.testng.annotations.AfterClass;
+import org.testng.annotations.AfterMethod;
+import org.testng.annotations.BeforeClass;
+import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 public class HotelBookingTest {
 
-    WebDriver driver = new ChromeDriver();
+	/**
+	 * 
+	 * author Swagatika
+	 * 
+	 */
 
-    @FindBy(linkText = "Hotels")
-    private WebElement hotelLink;
 
-    @FindBy(id = "Tags")
-    private WebElement localityTextBox;
+	/* Declaring the objects*/
+	WebDriver driver ;
+	FlightPage flightPage;
+	HotelPage hotelPage;
 
-    @FindBy(id = "SearchHotelsButton")
-    private WebElement searchButton;
+	@BeforeClass
+	public void configurationBeforeRunningClass()
+	{
+		/* Initializing the elements*/
 
-    @FindBy(id = "travellersOnhome")
-    private WebElement travellerSelection;
+		Reporter.log("launch browser");
+		driver = Browser.getBrowser();
+		hotelPage = PageFactory.initElements(driver, HotelPage.class);
+		flightPage = PageFactory.initElements(driver, FlightPage.class);
+	}
 
-    @Test
-    public void shouldBeAbleToSearchForHotels() {
-        setDriverPath();
+	@BeforeMethod
+	public void configurationBeforeRunningMethod()
+	{
+		Reporter.log("Navigating to homepage of Application");
+		flightPage.navigateToFlightPage();
+	}
 
-        driver.get("https://www.cleartrip.com/");
-        hotelLink.click();
+	@Test
+	public void shouldBeAbleToSearchForHotels() throws InterruptedException {
+		CommonMethods com = new CommonMethods();
 
-        localityTextBox.sendKeys("Indiranagar, Bangalore");
+		Reporter.log("Navigated to homepage sucessfully and perform various actions");
+		flightPage.performActionFlightPage();
+		hotelPage.enterDetailsForHotel();
+		com.waitFor(2000);
+		WebElement destinationOptions = driver.findElement(By.id("ui-id-1"));	
+		destinationOptions.click();
+		hotelPage.selectCheckInAndCheckOutDate();
+		hotelPage.enterOccupantsDetailsAndClickSearch();
+	}
 
-        new Select(travellerSelection).selectByVisibleText("1 room, 2 adults");
-        searchButton.click();
+	@AfterClass
+	public void configurationAfterRunningClass()
+	{
+		driver.quit();
+	}
 
-        driver.quit();
-
-    }
-
-    private void setDriverPath() {
-        if (PlatformUtil.isMac()) {
-            System.setProperty("webdriver.chrome.driver", "chromedriver");
-        }
-        if (PlatformUtil.isWindows()) {
-            System.setProperty("webdriver.chrome.driver", "chromedriver.exe");
-        }
-        if (PlatformUtil.isLinux()) {
-            System.setProperty("webdriver.chrome.driver", "chromedriver_linux");
-        }
-    }
 
 }
